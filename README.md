@@ -1,66 +1,83 @@
-# Custom WooCommerce Payment Gateway Plugin
+# **Custom WC Payment Gateway**
 
-## Description
+## **Description**
 
-This plugin adds a custom payment gateway for WooCommerce to simulate a payment process. It allows customers to input mock payment details directly on the checkout page, offering an easy way to test and demonstrate the checkout functionality without real payment processing.
+Custom WC Payment Gateway is a simple plugin that adds a mock payment gateway to WooCommerce. It allows customers to simulate payments on the checkout page and provides admin settings for customization.
 
-## Installation and Activation Steps
+---
 
-1. **Download the Plugin:**
+## **Features**
 
-   - Download the `custom-woocommerce-payment-gateway` folder and ensure it contains the files: `custom-woocommerce-payment-gateway.php` and `class-cwg-payment-gateway.php`.
+- Allows customers to make mock payments during checkout.
+- Includes admin settings for enabling/disabling the gateway, setting a custom gateway name, and other configurations.
+- Processes and validates mock payment data.
+- Updates WooCommerce order status to "Processing" upon successful payment.
 
-2. **Upload the Plugin:**
+---
 
-   - Log in to your WordPress admin dashboard.
-   - Go to `Plugins` > `Add New`.
-   - Click on the `Upload Plugin` button.
-   - Choose the downloaded plugin ZIP file or upload the folder to the `/wp-content/plugins/` directory using an FTP client.
+## **Installation**
 
-3. **Activate the Plugin:**
+### **From the WordPress Admin Dashboard**
 
-   - Go to `Plugins` in your WordPress dashboard.
-   - Find `Custom WooCommerce Payment Gateway` and click `Activate`.
+1. Navigate to **Plugins > Add New**.
+2. Click **Upload Plugin** and select the plugin `.zip` file.
+3. Click **Install Now** and activate the plugin.
 
-4. **Configure the Plugin:**
-   - Navigate to `WooCommerce` > `Settings` > `Payments`.
-   - Find `Custom Payment` (or whatever you set the title to) in the list of payment methods.
-   - Click on the `Manage` button to configure the settings.
-   - Enter the desired title, enable or disable the gateway, and adjust any additional settings as needed.
+### **Manually via FTP**
 
-## How to Test the Functionality
+1. Extract the plugin `.zip` file.
+2. Upload the `custom-wc-payment-gateway` folder to the `/wp-content/plugins/` directory.
+3. Go to **Plugins** in the WordPress admin dashboard and activate the plugin.
 
-1. **Place a Test Order:**
+---
 
-   - Visit the frontend of your WooCommerce store and add a product to your cart.
-   - Proceed to checkout.
-   - Select the `Custom Payment` option.
-   - Fill in the mock payment details (mock card number and expiration date).
+## **Configuration**
 
-2. **Review the Order:**
-   - Upon successful submission of the order, you should be redirected to the order confirmation page.
-   - Check that the order status is set to `Processing` in the WooCommerce orders list.
+1. Ensure WooCommerce is installed and activated.
+2. Navigate to **WooCommerce > Settings > Payments**.
+3. Locate **Custom WC Payment Gateway** and click **Manage**.
+4. Configure the following settings:
+   - **Enable/Disable**: Toggle to enable or disable the gateway.
+   - **Payment Gateway Name**: Set the name displayed at checkout.
+   - **Test Mode**: Enable test mode for mock transactions.
 
-## Plugin Architecture
+---
 
-- **Custom Payment Gateway Class:**
-  - The main class `CWG_Payment_Gateway` extends `WC_Payment_Gateway` to define the payment gateway functionalities.
-- **Settings Page:**
+## **Testing the Plugin**
 
-  - The plugin provides an admin settings page for enabling/disabling the gateway and customizing its title.
+1. Go to your WooCommerce store checkout page.
+2. Select the **Custom Payment Gateway** during checkout.
+3. Enter the mock payment details:
+   - **Card Number**: Use any numeric value.
+   - **Expiration Date**: Use any valid date.
+   - **CVC**: Use any numeric value.
+4. Place the order. The WooCommerce order status will update to "Processing" upon successful validation.
 
-- **Payment Fields:**
+---
 
-  - The plugin adds a form to the checkout page to collect mock payment information.
+## **Plugin Architecture**
 
-- **Order Processing:**
-  - On form submission, the order status is updated to `Processing` to simulate successful payment.
+### **Main Files**
 
-## Notes
+- `custom-wc-payment-gateway.php`: Main plugin file that initializes the plugin.
+- `includes/class-wc-custom-gateway.php`: Contains the custom payment gateway class extending `WC_Payment_Gateway`.
 
-- This plugin does not process real payments. It is for demonstration and testing purposes only.
-- Ensure proper sanitization and validation of input fields if this plugin is extended for production use.
+### **Hooks and Filters**
 
-## Support
+- `plugins_loaded`: Ensures WooCommerce is loaded before initializing the plugin.
+- `woocommerce_payment_gateways`: Adds the custom payment gateway to WooCommerce.
 
-For support or feature requests, please open an issue on the plugin's repository.
+---
+
+## **Demo**
+
+1. **Admin Settings**: Demonstrate how to configure the plugin under **WooCommerce > Settings > Payments**.
+2. **Checkout Process**: Show the payment gateway in action with mock data.
+3. **Order Processing**: Verify that the order status changes to "Processing" after a successful mock payment.
+
+---
+
+## **Notes**
+
+- This plugin is for demonstration purposes and does not process real payments.
+- Follow WordPress and WooCommerce coding standards when extending the plugin.
