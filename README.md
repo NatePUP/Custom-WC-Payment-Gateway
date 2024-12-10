@@ -71,8 +71,8 @@ Custom WC Payment Gateway is a simple plugin that adds a mock payment gateway to
 
 ## **Demo**
 
-1. **Admin Settings**: Demonstrate how to configure the plugin under **WooCommerce > Settings > Payments**.
-2. **Checkout Process**: Show the payment gateway in action with mock data.
+1. **Admin Settings**: Configure the plugin under **WooCommerce > Settings > Payments**.
+2. **Checkout Process**: Payment gateway in action with mock data.
 3. **Order Processing**: Verify that the order status changes to "Processing" after a successful mock payment.
 
 ---
@@ -80,4 +80,3 @@ Custom WC Payment Gateway is a simple plugin that adds a mock payment gateway to
 ## **Notes**
 
 - This plugin is for demonstration purposes and does not process real payments.
-- Follow WordPress and WooCommerce coding standards when extending the plugin.
