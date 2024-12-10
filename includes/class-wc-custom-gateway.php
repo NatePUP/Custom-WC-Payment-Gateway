@@ -10,33 +10,58 @@ class WC_Custom_Gateway extends WC_Payment_Gateway
     public function __construct()
     {
         $this->id = 'custom_gateway'; // Gateway ID
-        // $this->icon = ''; // Icon for the gateway
-        $this->has_fields = true; // Whether the gateway requires fields (e.g., credit card)
-        $this->method_title = 'Custom Payment Gateway'; // Title to show in admin
-        $this->method_description = 'Custom Payment Gateway for WooCommerce'; // Description
+        $this->method_title = __('Custom Payment Gateway', 'custom-wc-payment-gateway'); // Title to display in admin
+        $this->method_description = __('Custom Payment Gateway for WooCommerce', 'custom-wc-payment-gateway'); // Description for the gateway
+        $this->has_fields = true; // Whether the gateway requires custom fields
 
-        // Load the settings
+        // Load the settings and initialize form fields
         $this->init_form_fields();
         $this->init_settings();
 
-        // Actions
+        // Action to save settings when updated
         add_action('woocommerce_update_options_payment_gateways_' . $this->id, array($this, 'process_admin_options'));
+
+        // Add support for WooCommerce blocks
+        add_filter('woocommerce_gateway_get_supported_features', [$this, 'add_blocks_support']);
     }
 
+    /**
+     * Add WooCommerce Blocks support.
+     *
+     * @param array $features Array of supported features.
+     * @return array Updated features array.
+     */
+    public function add_blocks_support($features)
+    {
+        $features[] = 'woocommerce_blocks_support'; // Ensure the gateway supports WooCommerce blocks
+        return $features;
+    }
+
+    /**
+     * Get the title of the payment gateway.
+     * Sanitizes the title before returning it.
+     *
+     * @return string Payment gateway title.
+     */
     public function get_title()
     {
-        // Return the title of the payment gateway
-        return 'Custom Payment Gateway'; // This is the title that will appear on the checkout page
+        // Get the title from the plugin's settings
+        $settings = get_option('woocommerce_' . $this->id . '_settings');
+
+        // Return the sanitized title, or fallback to default if empty
+        return isset($settings['title']) && !empty($settings['title']) ? sanitize_text_field($settings['title']) : __('Custom Payment Gateway', 'custom-wc-payment-gateway');
     }
 
-    // Initialize the gateway's form fields
+    /**
+     * Initialize the payment gateway's form fields.
+     */
     public function init_form_fields()
     {
         $this->form_fields = array(
             'title' => array(
                 'title' => __('Title', 'custom-wc-payment-gateway'),
                 'type' => 'text',
-                'description' => __('The title which the user sees during checkout.', 'custom-wc-payment-gateway'),
+                'description' => __('The title shown to customers during checkout.', 'custom-wc-payment-gateway'),
                 'default' => __('Custom Payment Gateway', 'custom-wc-payment-gateway'),
                 'desc_tip' => true,
             ),
@@ -44,7 +69,7 @@ class WC_Custom_Gateway extends WC_Payment_Gateway
                 'title' => __('Enable/Disable', 'custom-wc-payment-gateway'),
                 'type' => 'checkbox',
                 'label' => __('Enable Custom WC Payment Gateway', 'custom-wc-payment-gateway'),
-                'default' => 'yes'
+                'default' => 'yes',
             ),
             'test_mode' => array(
                 'title' => __('Test Mode', 'custom-wc-payment-gateway'),
@@ -52,13 +77,16 @@ class WC_Custom_Gateway extends WC_Payment_Gateway
                 'label' => __('Enable Test Mode', 'custom-wc-payment-gateway'),
                 'default' => 'yes',
                 'desc_tip' => true,
-            )
+            ),
         );
     }
-    // includes/class-wc-custom-gateway.php
+
+    /**
+     * Display the payment fields on the checkout page.
+     */
     public function payment_fields()
     {
-        // Display the custom payment fields on checkout
+        // Display a brief message about the custom payment gateway
         echo '<p>' . __('This is a custom payment gateway. Please enter your details below.', 'custom-wc-payment-gateway') . '</p>';
 
         // Card Number Field
@@ -80,13 +108,17 @@ class WC_Custom_Gateway extends WC_Payment_Gateway
         echo '</p>';
     }
 
-
-    // Process payment
+    /**
+     * Process the payment for the order.
+     *
+     * @param int $order_id The order ID.
+     * @return array Result of the payment process.
+     */
     public function process_payment($order_id)
     {
         $order = wc_get_order($order_id);
 
-        // Update the order status to processing
+        // Update the order status to "processing"
         $order->update_status('processing', __('Payment successful.', 'custom-wc-payment-gateway'));
 
         // Reduce stock levels
@@ -100,11 +132,5 @@ class WC_Custom_Gateway extends WC_Payment_Gateway
             'result' => 'success',
             'redirect' => $this->get_return_url($order),
         );
-    }
-
-    // Enable block-based checkout compatibility
-    public function is_block_based()
-    {
-        return true;
     }
 }

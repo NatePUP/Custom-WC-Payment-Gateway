@@ -11,57 +11,67 @@
 
 defined('ABSPATH') || exit;
 
-// Initialize the payment gateway on 'plugins_loaded' action with priority 11
+/**
+ * Initialize the custom payment gateway after WooCommerce is loaded.
+ */
 add_action('plugins_loaded', 'custom_wc_payment_gateway_init', 11);
 
 function custom_wc_payment_gateway_init()
 {
     if (!class_exists('WC_Payment_Gateway')) {
-        // Show an admin notice if WooCommerce is not active
+        // Display admin notice if WooCommerce is not active
         add_action('admin_notices', function () {
             echo '<div class="error"><p>' . esc_html__('WooCommerce must be active for Custom WC Payment Gateway.', 'custom-wc-payment-gateway') . '</p></div>';
         });
         return;
     }
 
-    // Include the payment gateway class
+    // Include the payment gateway class file
     require_once plugin_dir_path(__FILE__) . 'includes/class-wc-custom-gateway.php';
 
-    // Add the gateway to WooCommerce (with block-based support)
+    // Add the custom payment gateway to WooCommerce
     add_filter('woocommerce_payment_gateways', function ($gateways) {
-        $gateways[] = 'WC_Custom_Gateway';
-        return $gateways;
-    });
-
-    // Ensure compatibility with block-based checkout
-    add_filter('woocommerce_blocks_checkout_payment_gateways', function ($gateways) {
-        $gateways[] = 'WC_Custom_Gateway';
+        $gateways[] = 'WC_Custom_Gateway'; // Adding the custom gateway class to the list of available gateways
         return $gateways;
     });
 }
 
-
 /**
- * Display an admin notice if WooCommerce is not active
+ * Add custom payment gateway support for WooCommerce Blocks (Gutenberg).
  */
-function custom_wc_payment_gateway_missing_wc_notice()
-{
-    echo '<div class="error"><p>' . esc_html__('WooCommerce must be active for the Custom WC Payment Gateway plugin to work.', 'custom-wc-payment-gateway') . '</p></div>';
-}
+add_action('init', function () {
+    if (class_exists('Automattic\WooCommerce\Blocks\Payments\PaymentMethodRegistry')) {
+        add_filter('woocommerce_blocks_checkout_payment_gateways', function ($gateways) {
+            $gateways['custom_wc_payment_gateway'] = [
+                'title' => __('Custom WC Payment Gateway', 'custom-wc-payment-gateway'),
+                'description' => __('Mock payment gateway for testing.', 'custom-wc-payment-gateway'),
+                'supports' => ['products'], // Specify supported features
+            ];
+            return $gateways;
+        });
+    }
+});
 
 /**
- * Add the Custom Gateway to WooCommerce payment methods
+ * Register custom payment gateway for WooCommerce Blocks
+ */
+add_action('woocommerce_blocks_checkout_payment_method_register', function ($payment_method_registry) {
+    $payment_method_registry->register(
+        'custom_wc_payment_gateway',
+        [
+            'title' => __('Custom WC Payment Gateway', 'custom-wc-payment-gateway'),
+            'description' => __('Mock payment gateway for testing.', 'custom-wc-payment-gateway'),
+            'supports' => ['products'],
+            'script_handles' => ['custom-payment-blocks'], // Link the JS file for the blocks
+        ]
+    );
+});
+
+/**
+ * Debug utility for logging messages if WP_DEBUG is enabled.
  *
- * @param array $gateways Existing gateways.
- * @return array Updated gateways.
+ * @param string $message The message to log.
  */
-function custom_wc_add_gateway_class($gateways)
-{
-    $gateways[] = 'WC_Custom_Gateway';
-    return $gateways;
-}
-
-
 function custom_gateway_debug_log($message)
 {
     if (defined('WP_DEBUG') && WP_DEBUG) {
@@ -69,6 +79,9 @@ function custom_gateway_debug_log($message)
     }
 }
 
+/**
+ * Handle plugin activation hooks and initialization.
+ */
 function custom_gateway_init()
 {
     custom_gateway_debug_log('Custom Gateway Init triggered.');
@@ -78,4 +91,23 @@ function custom_gateway_init()
         custom_gateway_debug_log('WC_Payment_Gateway class not found.');
     }
 }
+
 add_action('plugins_loaded', 'custom_gateway_init');
+
+/**
+ * Process custom payment via REST API.
+ *
+ * @param WP_REST_Request $request The request object.
+ */
+function custom_wc_process_payment($request)
+{
+    $parameters = $request->get_json_params();
+    $order_id = $parameters['order_id'];
+
+    // Process the payment if order ID is provided
+    if ($order_id) {
+        return rest_ensure_response(['success' => true, 'message' => 'Payment processed.']);
+    }
+
+    return new WP_Error('invalid_data', 'Invalid order ID.', ['status' => 400]);
+}
