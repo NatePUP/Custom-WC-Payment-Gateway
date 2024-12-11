@@ -118,10 +118,10 @@ class WC_Custom_Gateway extends WC_Payment_Gateway
         $order = wc_get_order($order_id);
 
         if ($this->test_mode) {
-            // Test mode: Simulate payment success without actual processing
-            $order->update_status('on-hold', __('Payment successful (test mode).', 'custom-wc-payment-gateway'));
+            // Test mode: Set the order status to "processing" and include a note
+            $order->update_status('processing', __('Payment successful (test mode).', 'custom-wc-payment-gateway'));
         } else {
-            // Live mode: Simulate payment success as usual
+            // Live mode: Set the order status to "processing" as usual
             $order->update_status('processing', __('Payment successful.', 'custom-wc-payment-gateway'));
         }
 
@@ -137,5 +137,4 @@ class WC_Custom_Gateway extends WC_Payment_Gateway
             'redirect' => $this->get_return_url($order),
         );
     }
-
 }
