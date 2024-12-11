@@ -104,6 +104,35 @@ class WC_Custom_Gateway extends WC_Payment_Gateway
         echo '<label for="mock_cvv">' . __('CVV', 'custom-wc-payment-gateway') . ':</label>';
         echo '<input type="text" id="mock_cvv" name="mock_cvv" placeholder="123" maxlength="3" pattern="\d{3}" required />';
         echo '</p>';
+
+        // Add custom JavaScript for form validation
+        echo '<script>
+    (function($){
+        $("form.checkout").on("checkout_place_order_custom_gateway", function() {
+            var cardNumber = $("#mock_card_number").val().trim();
+            var expiryDate = $("#mock_expiry_date").val().trim();
+            var cvv = $("#mock_cvv").val().trim();
+
+            // Basic validation for each field
+            if (!/^\d{16}$/.test(cardNumber.replace(/\s+/g, ""))) {
+                alert("' . esc_js(__('Invalid card number. Please enter a 16-digit card number.', 'custom-wc-payment-gateway')) . '");
+                return false;
+            }
+
+            if (!/^\d{2}\/\d{2}$/.test(expiryDate)) {
+                alert("' . esc_js(__('Invalid expiration date. Please use the MM/YY format.', 'custom-wc-payment-gateway')) . '");
+                return false;
+            }
+
+            if (!/^\d{3}$/.test(cvv)) {
+                alert("' . esc_js(__('Invalid CVV. Please enter a 3-digit CVV.', 'custom-wc-payment-gateway')) . '");
+                return false;
+            }
+
+            return true; // Allow the checkout process to proceed
+        });
+    })(jQuery);
+</script>';
     }
 
 
