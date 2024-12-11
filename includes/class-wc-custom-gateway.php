@@ -7,34 +7,28 @@ if (!defined('ABSPATH')) {
 
 class WC_Custom_Gateway extends WC_Payment_Gateway
 {
+    /**
+     * Indicates whether the gateway is in test mode.
+     *
+     * @var bool
+     */
+    private $test_mode;
     public function __construct()
     {
-        $this->id = 'custom_gateway'; // Gateway ID
-        $this->method_title = __('Custom Payment Gateway', 'custom-wc-payment-gateway'); // Title to display in admin
-        $this->method_description = __('Custom Payment Gateway for WooCommerce', 'custom-wc-payment-gateway'); // Description for the gateway
-        $this->has_fields = true; // Whether the gateway requires custom fields
+        $this->id = 'custom_gateway';
+        $this->method_title = __('Custom Payment Gateway', 'custom-wc-payment-gateway');
+        $this->method_description = __('Custom Payment Gateway for WooCommerce', 'custom-wc-payment-gateway');
+        $this->has_fields = true;
 
-        // Load the settings and initialize form fields
+        // Load the settings
         $this->init_form_fields();
         $this->init_settings();
 
-        // Action to save settings when updated
+        // Retrieve the test mode setting
+        $this->test_mode = $this->get_option('test_mode') === 'yes';
+
+        // Save admin options when updated
         add_action('woocommerce_update_options_payment_gateways_' . $this->id, array($this, 'process_admin_options'));
-
-        // Add support for WooCommerce blocks
-        add_filter('woocommerce_gateway_get_supported_features', [$this, 'add_blocks_support']);
-    }
-
-    /**
-     * Add WooCommerce Blocks support.
-     *
-     * @param array $features Array of supported features.
-     * @return array Updated features array.
-     */
-    public function add_blocks_support($features)
-    {
-        $features[] = 'woocommerce_blocks_support'; // Ensure the gateway supports WooCommerce blocks
-        return $features;
     }
 
     /**
@@ -86,7 +80,11 @@ class WC_Custom_Gateway extends WC_Payment_Gateway
      */
     public function payment_fields()
     {
-        // Display a brief message about the custom payment gateway
+        if ($this->test_mode) {
+            echo '<p><strong>' . __('Test mode is enabled. Payments are not real.', 'custom-wc-payment-gateway') . '</strong></p>';
+        }
+
+        // Display mock payment fields
         echo '<p>' . __('This is a custom payment gateway. Please enter your details below.', 'custom-wc-payment-gateway') . '</p>';
 
         // Card Number Field
@@ -108,6 +106,7 @@ class WC_Custom_Gateway extends WC_Payment_Gateway
         echo '</p>';
     }
 
+
     /**
      * Process the payment for the order.
      *
@@ -118,8 +117,13 @@ class WC_Custom_Gateway extends WC_Payment_Gateway
     {
         $order = wc_get_order($order_id);
 
-        // Update the order status to "processing"
-        $order->update_status('processing', __('Payment successful.', 'custom-wc-payment-gateway'));
+        if ($this->test_mode) {
+            // Test mode: Set the order status to "processing" and include a note
+            $order->update_status('processing', __('Payment successful (test mode).', 'custom-wc-payment-gateway'));
+        } else {
+            // Live mode: Set the order status to "processing" as usual
+            $order->update_status('processing', __('Payment successful.', 'custom-wc-payment-gateway'));
+        }
 
         // Reduce stock levels
         wc_reduce_stock_levels($order_id);
