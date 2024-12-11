@@ -108,31 +108,45 @@ class WC_Custom_Gateway extends WC_Payment_Gateway
         // Add custom JavaScript for form validation
         echo '
         <script>
-            (function($){
-                $("form.checkout").on("checkout_place_order_custom_gateway", function() {
-                    var cardNumber = $("#mock_card_number").val().trim();
-                    var expiryDate = $("#mock_expiry_date").val().trim();
-                    var cvv = $("#mock_cvv").val().trim();
+                (function($){
+                    $("form.checkout").on("checkout_place_order_custom_gateway", function() {
+                        var cardNumber = $("#mock_card_number").val().trim();
+                        var expiryDate = $("#mock_expiry_date").val().trim();
+                        var cvv = $("#mock_cvv").val().trim();
 
-                    // Basic validation for each field
-                    if (!/^\d{16}$/.test(cardNumber.replace(/\s+/g, ""))) {
-                        alert("' . esc_js(__('Invalid card number. Please enter a 16-digit card number.', 'custom-wc-payment-gateway')) . '");
-                        return false;
-                    }
+                        // Validate Card Number
+                        if (!/^\d{16}$/.test(cardNumber.replace(/\s+/g, ""))) {
+                            alert("' . esc_js(__('Invalid card number. Please enter a 16-digit card number.', 'custom-wc-payment-gateway')) . '");
+                            return false;
+                        }
 
-                    if (!/^\d{2}\/\d{2}$/.test(expiryDate)) {
-                        alert("' . esc_js(__('Invalid expiration date. Please use the MM/YY format.', 'custom-wc-payment-gateway')) . '");
-                        return false;
-                    }
+                        // Validate Expiry Date
+                        var expiryParts = expiryDate.split("/");
+                        if (expiryParts.length !== 2 || !/^\d{2}$/.test(expiryParts[0]) || !/^\d{2}$/.test(expiryParts[1])) {
+                            alert("' . esc_js(__('Invalid expiration date. Please use the MM/YY format.', 'custom-wc-payment-gateway')) . '");
+                            return false;
+                        }
 
-                    if (!/^\d{3}$/.test(cvv)) {
-                        alert("' . esc_js(__('Invalid CVV. Please enter a 3-digit CVV.', 'custom-wc-payment-gateway')) . '");
-                        return false;
-                    }
+                        var month = parseInt(expiryParts[0], 10);
+                        var year = parseInt("20" + expiryParts[1], 10); // Convert YY to YYYY
+                        var currentDate = new Date();
+                        var currentYear = currentDate.getFullYear();
+                        var currentMonth = currentDate.getMonth() + 1;
 
-                    return true; // Allow the checkout process to proceed
-                });
-            })(jQuery);
+                        if (month < 1 || month > 12 || year < currentYear || (year === currentYear && month < currentMonth)) {
+                            alert("' . esc_js(__('Invalid expiration date. Please ensure the date is not in the past.', 'custom-wc-payment-gateway')) . '");
+                            return false;
+                        }
+
+                        // Validate CVV
+                        if (!/^\d{3}$/.test(cvv)) {
+                            alert("' . esc_js(__('Invalid CVV. Please enter a 3-digit CVV.', 'custom-wc-payment-gateway')) . '");
+                            return false;
+                        }
+
+                        return true; // Allow the checkout process to proceed
+                    });
+                })(jQuery);
         </script>';
     }
 
